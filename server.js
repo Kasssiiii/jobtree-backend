@@ -28,6 +28,31 @@ const User = mongoose.model("User", {
   },
 });
 
+const Posting = mongoose.model("Posting ", {
+  jobTitle: {
+    type: String,
+    require: true,
+  },
+  company: {
+    type: String,
+    require: true,
+  },
+  stage: {
+    type: String,
+    require: true,
+    enum: ["applied", "interview", "offer", "rejected"],
+    default: "applied",
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  userName: {
+    type: String,
+    require: true,
+  }
+});
+
 // Defines the port the app will run on. Defaults to 8080, but can be overridden
 // when starting the server. Example command to overwrite PORT env variable value:
 // PORT=9000 npm start
@@ -88,6 +113,37 @@ const authenticateUser = async (req, res, next) => {
     res.status(401).json({ error: "User logged out" });
   }
 };
+
+//
+// Posting section
+//
+
+// creating a posting 
+app.post("/postings", authenticateUser);
+app.post("/postings", async (req, res) => {
+  const jobTitle = req.body.jobTitle;
+  const company = req.body.company;
+
+  if (!jobTitle || !company) {
+    res.status(400).send({ error: "Could not create posting. Job title or company missing" });
+    return;
+  }
+
+  const posting = new Posting({
+    jobTitle: jobTitle,
+    company: company,
+    userName: req.user.name
+  });
+  await posting.save();
+  res.status(201).send(posting);
+});
+
+//fetching all postings for an authenticated user   
+app.post("/postings/user", authenticateUser);
+app.post("/postings/user", async (req, res) => {
+  const postings = await Posting.find({ userName: req.user.name });
+  res.send(postings);
+});
 
 // Start defining your routes here
 app.get("/", (req, res) => {
