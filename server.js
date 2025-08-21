@@ -139,8 +139,8 @@ app.post("/postings", async (req, res) => {
 });
 
 //fetching all postings for an authenticated user   
-app.post("/postings/user", authenticateUser);
-app.post("/postings/user", async (req, res) => {
+app.get("/postings/user", authenticateUser);
+app.get("/postings/user", async (req, res) => {
   const postings = await Posting.find({ userName: req.user.name });
   res.send(postings);
 });
