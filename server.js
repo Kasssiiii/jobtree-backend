@@ -145,6 +145,26 @@ app.get("/postings/user", async (req, res) => {
   res.send(postings);
 });
 
+//updating a posting from an authenticated user
+app.put("/postings/:id", authenticateUser);
+app.put("/postings/:id", async (req, res) => {
+  const postingId = req.params.id;
+  const { jobTitle, company, stage } = req.body;
+
+  const posting = await Posting.findOne({ _id: postingId, userName: req.user.name });
+
+  if (!posting) {
+    return res.status(404).send({ error: "Posting not found or user not authorized" });
+  }
+
+  posting.jobTitle = jobTitle || posting.jobTitle;
+  posting.company = company || posting.company;
+  posting.stage = stage || posting.stage;
+
+  await posting.save();
+  res.send(posting);
+});
+
 // Start defining your routes here
 app.get("/", (req, res) => {
   res.send("Hello Technigo!");
