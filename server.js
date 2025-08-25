@@ -16,7 +16,20 @@ mongoose.connect(mongoUrl);
 const User = mongoose.model("User", {
   name: {
     type: String,
+    required: true,
     unique: true,
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    // https://codemia.io/knowledge-hub/path/mongoose_-_validate_email_syntax
+    validate: {
+      validator: function (v) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+      },
+      message: props => `${props.value} is not a valid email address!`
+    }
   },
   password: {
     type: String,
@@ -66,17 +79,19 @@ app.use(express.json());
 //endpoint for creating a user
 app.post("/users", async (req, res) => {
   const userName = req.body.user;
+  const email = req.body.email;
   const password = req.body.password;
-  if (!userName || !password) {
+  if (!userName || !email || !password) {
     res
       .status(400)
-      .send({ error: "Could not create user. User or password missing" });
+      .send({ error: "Could not create user. User, email or password missing" });
     return;
   }
   try {
     const user = new User({
       name: userName,
       password: bcrypt.hashSync(password),
+      email: email,
     });
     await user.save();
     res.status(201).send(user);
