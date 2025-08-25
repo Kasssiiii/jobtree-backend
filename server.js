@@ -66,6 +66,26 @@ const Posting = mongoose.model("Posting ", {
   }
 });
 
+// Contact schema
+const Contact = mongoose.model("Contact", {
+  name: {
+    type: String,
+    required: true,
+  },
+  company: {
+    type: String,
+    required: true,
+  },
+  notes: {
+    type: String,
+    default: "",
+  },
+  userName: {
+    type: String,
+    required: true,
+  }
+});
+
 // Defines the port the app will run on. Defaults to 8080, but can be overridden
 // when starting the server. Example command to overwrite PORT env variable value:
 // PORT=9000 npm start
@@ -178,6 +198,59 @@ app.put("/postings/:id", async (req, res) => {
 
   await posting.save();
   res.send(posting);
+});
+
+// Contacts API
+
+// Get all contacts for authenticated user
+app.get("/contacts", authenticateUser);
+app.get("/contacts", async (req, res) => {
+  const contacts = await Contact.find({ userName: req.user.name });
+  res.send(contacts);
+});
+
+// Add a new contact
+app.post("/contacts", authenticateUser);
+app.post("/contacts", async (req, res) => {
+  const { name, company, notes } = req.body;
+  if (!name || !company) {
+    return res.status(400).send({ error: "Name and company are required" });
+  }
+  const contact = new Contact({
+    name,
+    company,
+    notes,
+    userName: req.user.name
+  });
+  await contact.save();
+  res.status(201).send(contact);
+});
+
+// Update a contact
+app.put("/contacts/:id", authenticateUser);
+app.put("/contacts/:id", async (req, res) => {
+  const contactId = req.params.id;
+  const { name, company, notes } = req.body;
+  const contact = await Contact.findOne({ _id: contactId, userName: req.user.name });
+  if (!contact) {
+    return res.status(404).send({ error: "Contact not found or user not authorized" });
+  }
+  contact.name = name || contact.name;
+  contact.company = company || contact.company;
+  contact.notes = notes || contact.notes;
+  await contact.save();
+  res.send(contact);
+});
+
+// Delete a contact
+app.delete("/contacts/:id", authenticateUser);
+app.delete("/contacts/:id", async (req, res) => {
+  const contactId = req.params.id;
+  const contact = await Contact.findOneAndDelete({ _id: contactId, userName: req.user.name });
+  if (!contact) {
+    return res.status(404).send({ error: "Contact not found or user not authorized" });
+  }
+  res.send({ success: true });
 });
 
 // Start defining your routes here
