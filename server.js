@@ -63,6 +63,10 @@ const Posting = mongoose.model("Posting ", {
   userName: {
     type: String,
     require: true,
+  },
+  lastStageChange: {
+    type: Date,
+    default: Date.now,
   }
 });
 
@@ -194,7 +198,14 @@ app.put("/postings/:id", async (req, res) => {
 
   posting.jobTitle = jobTitle || posting.jobTitle;
   posting.company = company || posting.company;
-  posting.stage = stage || posting.stage;
+
+  // Update lastStageChange only if stage is changed
+  if (stage && stage !== posting.stage) {
+    posting.stage = stage;
+    posting.lastStageChange = new Date();
+  } else {
+    posting.stage = stage || posting.stage;
+  }
 
   await posting.save();
   res.send(posting);
