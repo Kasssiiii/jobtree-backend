@@ -200,6 +200,28 @@ app.put("/postings/:id", async (req, res) => {
   res.send(posting);
 });
 
+// Get a single posting by id
+app.get("/postings/:id", authenticateUser);
+app.get("/postings/:id", async (req, res) => {
+  const postingId = req.params.id;
+  const posting = await Posting.findOne({ _id: postingId, userName: req.user.name });
+  if (!posting) {
+    return res.status(404).send({ error: "Posting not found or user not authorized" });
+  }
+  res.send(posting);
+});
+
+// Delete a posting by id
+app.delete("/postings/:id", authenticateUser);
+app.delete("/postings/:id", async (req, res) => {
+  const postingId = req.params.id;
+  const posting = await Posting.findOneAndDelete({ _id: postingId, userName: req.user.name });
+  if (!posting) {
+    return res.status(404).send({ error: "Posting not found or user not authorized" });
+  }
+  res.send({ success: true });
+});
+
 // Contacts API
 
 // Get all contacts for authenticated user
