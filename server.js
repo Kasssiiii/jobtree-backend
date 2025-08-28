@@ -41,7 +41,7 @@ const User = mongoose.model("User", {
   },
 });
 
-const Posting = mongoose.model("Posting ", {
+const Posting = mongoose.model("Posting", {
   jobTitle: {
     type: String,
     require: true,
